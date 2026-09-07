@@ -298,14 +298,9 @@ function startVoting(e) {
 }
 
 function castVote(vote) {
-    console.log('castVote called:', { currentSessionId, currentVotingId, hasVoted, vote });
-    
     if (!currentSessionId || !currentVotingId || hasVoted) {
-        console.log('Vote rejected: no session, no voting ID, or already voted');
         return;
     }
-    
-    console.log('Emitting castVote:', { roomId: currentSessionId, votingId: currentVotingId, vote });
     
     socket.emit('castVote', { 
         roomId: currentSessionId, 
@@ -322,7 +317,6 @@ function showError(message) {
 }
 
 function updateDeputiesList(deputies) {
-    console.log('updateDeputiesList called with:', deputies);
     const deputiesList = document.getElementById('usersList');
     deputiesList.innerHTML = deputies.map(deputy => {
         const initial = deputy.name.charAt(0).toUpperCase();
@@ -346,8 +340,6 @@ function updateDeputiesList(deputies) {
         } else {
             statusText = translations[currentLanguage].notVoted;
         }
-        
-        console.log(`Deputy ${deputy.name}: hasVoted=${deputy.hasVoted}, vote=${deputy.vote}, statusText=${statusText}`);
         
         return `
             <li class="deputy-item">
@@ -499,7 +491,6 @@ socket.on('userLeft', ({ userName, deputies }) => {
 });
 
 socket.on('deputiesUpdated', ({ deputies }) => {
-    console.log('Received deputiesUpdated:', deputies);
     updateDeputiesList(deputies);
     document.getElementById('totalUsers').textContent = deputies.length;
 });
@@ -512,8 +503,6 @@ socket.on('hostChanged', ({ newSpeaker }) => {
 });
 
 socket.on('votingStarted', ({ votingId, question, duration, requiredVotes, totalDeputies }) => {
-    console.log('votingStarted received:', { votingId, question, duration });
-    
     // Save the voting ID from server
     currentVotingId = votingId;
     
