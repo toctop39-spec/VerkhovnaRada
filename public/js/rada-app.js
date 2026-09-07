@@ -312,6 +312,7 @@ function showError(message) {
 }
 
 function updateDeputiesList(deputies) {
+    console.log('updateDeputiesList called with:', deputies);
     const deputiesList = document.getElementById('usersList');
     deputiesList.innerHTML = deputies.map(deputy => {
         const initial = deputy.name.charAt(0).toUpperCase();
@@ -335,6 +336,8 @@ function updateDeputiesList(deputies) {
         } else {
             statusText = translations[currentLanguage].notVoted;
         }
+        
+        console.log(`Deputy ${deputy.name}: hasVoted=${deputy.hasVoted}, vote=${deputy.vote}, statusText=${statusText}`);
         
         return `
             <li class="deputy-item">
@@ -471,6 +474,7 @@ socket.on('userLeft', ({ userName, deputies }) => {
 });
 
 socket.on('deputiesUpdated', ({ deputies }) => {
+    console.log('Received deputiesUpdated:', deputies);
     updateDeputiesList(deputies);
     document.getElementById('totalUsers').textContent = deputies.length;
 });
