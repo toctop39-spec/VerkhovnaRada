@@ -105,8 +105,8 @@
                 </div>
 
                 <div class="room-content">
-                    <!-- Sidebar - Deputies List -->
-                    <div class="sidebar">
+                    <!-- Sidebar - Deputies List (only for host) -->
+                    <div id="sidebar" class="sidebar hidden">
                         <h3 data-i18n="deputiesList">Список депутатів</h3>
                         <ul id="usersList" class="deputies-list"></ul>
                     </div>
@@ -162,6 +162,7 @@
                             <div class="voting-progress">
                                 <span data-i18n="votedDeputies">Проголосувало депутатів:</span>
                                 <span id="votedCount">0</span>/<span id="totalUsers">0</span>
+                                <span class="total-votes"> | Всього голосів: <span id="totalVotes">0</span></span>
                             </div>
                         </div>
 
@@ -192,7 +193,7 @@
                             
                             <div id="decision" class="decision-banner"></div>
                             
-                            <div class="decision-details">
+                            <div id="hostDecisionDetails" class="decision-details hidden">
                                 <button id="showDetailsBtn" class="official-btn btn-secondary" data-i18n="showDetails">Показати деталі голосування</button>
                                 <div id="voteDetails" class="hidden">
                                     <table class="results-table">
