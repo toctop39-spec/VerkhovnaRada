@@ -12,6 +12,11 @@ const PORT = process.env.PORT || 3000;
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Add favicon route to avoid 404 error
+app.get('/favicon.ico', (req, res) => {
+    res.status(204).end();
+});
+
 // Main route - serve the Rada voting system
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'rada-voting.html'));
@@ -161,6 +166,8 @@ io.on('connection', (socket) => {
         deputy.hasVoted = true;
         deputy.vote = vote;
         
+        console.log(`Deputy ${deputy.name} voted ${vote}. Total votes: ${Object.keys(session.currentVoting.votes).length}/${session.deputies.length}`);
+        
         io.to(roomId).emit('voteCast', { 
             userName: deputy.name, 
             vote,
@@ -172,6 +179,8 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('deputiesUpdated', { 
             deputies: session.deputies 
         });
+        
+        console.log('Sent deputiesUpdated with:', JSON.stringify(session.deputies.map(d => ({ name: d.name, hasVoted: d.hasVoted, vote: d.vote }))));
         
         // Check if all deputies voted
         if (Object.keys(session.currentVoting.votes).length === session.deputies.length) {
