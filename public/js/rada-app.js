@@ -21,6 +21,7 @@ const translations = {
         votingQuestion: 'Питання для голосування:',
         votingDuration: 'Час на голосування (секунди):',
         requiredVotes: 'Необхідна кількість голосів "ЗА" для прийняття:',
+        autoDecision: 'Автоматичне рішення (більше половини = прийнято)',
         startVoting: 'Почати голосування',
         timeRemaining: 'Час залишилося:',
         seconds: 'сек.',
@@ -69,6 +70,7 @@ const translations = {
         votingQuestion: 'Вопрос для голосования:',
         votingDuration: 'Время на голосование (секунды):',
         requiredVotes: 'Необходимое количество голосов "ЗА" для принятия:',
+        autoDecision: 'Автоматическое решение (больше половины = принято)',
         startVoting: 'Начать голосование',
         timeRemaining: 'Время осталось:',
         seconds: 'сек.',
@@ -117,6 +119,7 @@ const translations = {
         votingQuestion: 'Voting question:',
         votingDuration: 'Voting time (seconds):',
         requiredVotes: 'Required "FOR" votes for acceptance:',
+        autoDecision: 'Auto decision (more than half = accepted)',
         startVoting: 'Start voting',
         timeRemaining: 'Time remaining:',
         seconds: 'sec.',
@@ -156,6 +159,7 @@ let currentVotingId = null;
 let isSpeaker = false; // Host is called "Speaker" in Rada context
 let hasVoted = false;
 let timerInterval = null;
+let votingTimer = null;
 
 // DOM elements
 const screens = {
@@ -262,12 +266,20 @@ function leaveSession() {
         socket.emit('leaveRoom', { roomId: currentSessionId });
     }
     currentSessionId = null;
+    currentVotingId = null;
     isSpeaker = false;
     hasVoted = false;
+    
+    // Clear all timers
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
     }
+    if (votingTimer) {
+        clearInterval(votingTimer);
+        votingTimer = null;
+    }
+    
     showScreen('mainMenu');
     resetSessionUI();
 }
@@ -284,18 +296,30 @@ function startVoting(e) {
     e.preventDefault();
     const question = document.getElementById('votingQuestion').value;
     const duration = parseInt(document.getElementById('votingDuration').value);
-    const requiredVotes = parseInt(document.getElementById('requiredVotes').value);
+    const autoDecision = document.getElementById('autoDecision').checked;
+    const requiredVotes = autoDecision ? null : parseInt(document.getElementById('requiredVotes').value);
 
     socket.emit('startVoting', { 
         roomId: currentSessionId, 
         question, 
         duration, 
-        requiredVotes 
+        requiredVotes,
+        autoDecision
     });
     
     // Reset form
     document.getElementById('votingQuestion').value = '';
 }
+
+// Handle auto-decision checkbox
+document.getElementById('autoDecision').addEventListener('change', (e) => {
+    const requiredVotesGroup = document.getElementById('requiredVotesGroup');
+    if (e.target.checked) {
+        requiredVotesGroup.style.display = 'none';
+    } else {
+        requiredVotesGroup.style.display = 'block';
+    }
+});
 
 function castVote(vote) {
     if (!currentSessionId || !currentVotingId || hasVoted) {
@@ -355,8 +379,10 @@ function startTimer(duration) {
     let timeLeft = duration;
     document.getElementById('timerDisplay').textContent = timeLeft;
     
+    // Clear any existing timer
     if (timerInterval) {
         clearInterval(timerInterval);
+        timerInterval = null;
     }
     
     timerInterval = setInterval(() => {
@@ -368,6 +394,9 @@ function startTimer(duration) {
             timerInterval = null;
         }
     }, 1000);
+    
+    // Store timer reference for cleanup
+    votingTimer = timerInterval;
 }
 
 function displayResults(results) {
@@ -506,6 +535,12 @@ socket.on('votingStarted', ({ votingId, question, duration, requiredVotes, total
     // Save the voting ID from server
     currentVotingId = votingId;
     
+    // Clear any existing timer
+    if (votingTimer) {
+        clearInterval(votingTimer);
+        votingTimer = null;
+    }
+    
     document.getElementById('currentQuestion').textContent = question;
     document.getElementById('votingArea').classList.remove('hidden');
     document.getElementById('resultsArea').classList.add('hidden');
@@ -530,10 +565,16 @@ socket.on('voteCast', ({ userName, vote, votedCount, totalDeputies }) => {
 });
 
 socket.on('votingEnded', (results) => {
+    // Clear all timers
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
     }
+    if (votingTimer) {
+        clearInterval(votingTimer);
+        votingTimer = null;
+    }
+    
     displayResults(results);
 });
 
