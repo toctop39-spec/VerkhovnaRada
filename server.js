@@ -167,6 +167,11 @@ io.on('connection', (socket) => {
             totalDeputies: session.deputies.length
         });
         
+        // Send updated deputies list to show voting status
+        io.to(roomId).emit('deputiesUpdated', { 
+            deputies: session.deputies 
+        });
+        
         // Check if all deputies voted
         if (Object.keys(session.currentVoting.votes).length === session.deputies.length) {
             endVoting(roomId);
