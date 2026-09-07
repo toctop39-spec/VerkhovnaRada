@@ -152,6 +152,7 @@ const translations = {
 // Application state
 let currentLanguage = 'uk';
 let currentSessionId = null;
+let currentVotingId = null;
 let isSpeaker = false; // Host is called "Speaker" in Rada context
 let hasVoted = false;
 let timerInterval = null;
@@ -297,19 +298,18 @@ function startVoting(e) {
 }
 
 function castVote(vote) {
-    console.log('castVote called:', { currentSessionId, hasVoted, vote });
+    console.log('castVote called:', { currentSessionId, currentVotingId, hasVoted, vote });
     
-    if (!currentSessionId || hasVoted) {
-        console.log('Vote rejected: no session or already voted');
+    if (!currentSessionId || !currentVotingId || hasVoted) {
+        console.log('Vote rejected: no session, no voting ID, or already voted');
         return;
     }
     
-    const votingId = Date.now();
-    console.log('Emitting castVote:', { roomId: currentSessionId, votingId, vote });
+    console.log('Emitting castVote:', { roomId: currentSessionId, votingId: currentVotingId, vote });
     
     socket.emit('castVote', { 
         roomId: currentSessionId, 
-        votingId: votingId, 
+        votingId: currentVotingId, 
         vote 
     });
     hasVoted = true;
@@ -512,6 +512,11 @@ socket.on('hostChanged', ({ newSpeaker }) => {
 });
 
 socket.on('votingStarted', ({ votingId, question, duration, requiredVotes, totalDeputies }) => {
+    console.log('votingStarted received:', { votingId, question, duration });
+    
+    // Save the voting ID from server
+    currentVotingId = votingId;
+    
     document.getElementById('currentQuestion').textContent = question;
     document.getElementById('votingArea').classList.remove('hidden');
     document.getElementById('resultsArea').classList.add('hidden');
