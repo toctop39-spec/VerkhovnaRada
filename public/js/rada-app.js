@@ -316,7 +316,25 @@ function updateDeputiesList(deputies) {
     deputiesList.innerHTML = deputies.map(deputy => {
         const initial = deputy.name.charAt(0).toUpperCase();
         const statusClass = deputy.hasVoted ? 'status-voted' : 'status-not-voted';
-        const statusText = deputy.hasVoted ? translations[currentLanguage].youVoted : translations[currentLanguage].notVoted;
+        
+        let statusText;
+        if (deputy.hasVoted && deputy.vote) {
+            switch(deputy.vote) {
+                case 'for':
+                    statusText = translations[currentLanguage].voteForShort;
+                    break;
+                case 'against':
+                    statusText = translations[currentLanguage].voteAgainstShort;
+                    break;
+                case 'abstain':
+                    statusText = translations[currentLanguage].voteAbstainShort;
+                    break;
+                default:
+                    statusText = translations[currentLanguage].youVoted;
+            }
+        } else {
+            statusText = translations[currentLanguage].notVoted;
+        }
         
         return `
             <li class="deputy-item">
@@ -444,6 +462,10 @@ socket.on('userLeft', ({ userName, deputies }) => {
     updateDeputiesList(deputies);
 });
 
+socket.on('deputiesUpdated', ({ deputies }) => {
+    updateDeputiesList(deputies);
+});
+
 socket.on('hostChanged', ({ newSpeaker }) => {
     isSpeaker = socket.id === sessions[currentSessionId]?.speaker;
     if (isSpeaker) {
@@ -465,9 +487,6 @@ socket.on('votingStarted', ({ votingId, question, duration, requiredVotes }) => 
 socket.on('voteCast', ({ userName, vote, votedCount, totalDeputies }) => {
     document.getElementById('votedCount').textContent = votedCount;
     document.getElementById('totalUsers').textContent = totalDeputies;
-    
-    // Request updated deputies list
-    socket.emit('getVotingResults', { roomId: currentSessionId });
 });
 
 socket.on('votingEnded', (results) => {
@@ -476,18 +495,6 @@ socket.on('votingEnded', (results) => {
         timerInterval = null;
     }
     displayResults(results);
-});
-
-socket.on('votingResults', (results) => {
-    // Update deputies list with voting status
-    if (results.voteDetails) {
-        const updatedDeputies = results.voteDetails.map(detail => ({
-            name: detail.name,
-            hasVoted: detail.vote !== 'none',
-            vote: detail.vote
-        }));
-        updateDeputiesList(updatedDeputies);
-    }
 });
 
 socket.on('error', ({ message }) => {
