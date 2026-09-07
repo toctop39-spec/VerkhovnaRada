@@ -199,9 +199,11 @@ function setupEventListeners() {
         btn.addEventListener('click', () => castVote(btn.dataset.vote));
     });
 
-    // Results details
+    // Results details (only for host)
     document.getElementById('showDetailsBtn').addEventListener('click', () => {
-        document.getElementById('voteDetails').classList.toggle('hidden');
+        if (isSpeaker) {
+            document.getElementById('voteDetails').classList.toggle('hidden');
+        }
     });
 
     // Error modal
@@ -412,6 +414,13 @@ function displayResults(results) {
     // Reset voting state
     hasVoted = false;
     document.querySelectorAll('.vote-button').forEach(btn => btn.disabled = false);
+    
+    // Show details only for host
+    if (isSpeaker) {
+        document.getElementById('hostDecisionDetails').classList.remove('hidden');
+    } else {
+        document.getElementById('hostDecisionDetails').classList.add('hidden');
+    }
 }
 
 // Socket event listeners
@@ -424,11 +433,15 @@ socket.on('roomCreated', ({ sessionId, roomName, isHost: host }) => {
     
     // Initialize total users count for the host (starts with 1)
     document.getElementById('totalUsers').textContent = '1';
+    document.getElementById('totalVotes').textContent = '0';
     
     showScreen('session');
     
     if (isSpeaker) {
         document.getElementById('hostControls').classList.remove('hidden');
+        document.getElementById('sidebar').classList.remove('hidden');
+    } else {
+        document.getElementById('sidebar').classList.add('hidden');
     }
 });
 
@@ -449,9 +462,13 @@ socket.on('roomJoined', ({ roomId, roomName, isHost: host, deputies, currentVoti
     
     // Initialize total users count
     document.getElementById('totalUsers').textContent = deputies.length;
+    document.getElementById('totalVotes').textContent = '0';
     
     if (isSpeaker) {
         document.getElementById('hostControls').classList.remove('hidden');
+        document.getElementById('sidebar').classList.remove('hidden');
+    } else {
+        document.getElementById('sidebar').classList.add('hidden');
     }
     
     if (currentVoting) {
@@ -493,6 +510,7 @@ socket.on('votingStarted', ({ votingId, question, duration, requiredVotes, total
     
     // Reset voting counter and set total
     document.getElementById('votedCount').textContent = '0';
+    document.getElementById('totalVotes').textContent = '0';
     if (totalDeputies) {
         document.getElementById('totalUsers').textContent = totalDeputies;
     }
@@ -506,6 +524,7 @@ socket.on('votingStarted', ({ votingId, question, duration, requiredVotes, total
 socket.on('voteCast', ({ userName, vote, votedCount, totalDeputies }) => {
     document.getElementById('votedCount').textContent = votedCount;
     document.getElementById('totalUsers').textContent = totalDeputies;
+    document.getElementById('totalVotes').textContent = votedCount;
 });
 
 socket.on('votingEnded', (results) => {
