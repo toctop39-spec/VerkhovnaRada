@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система Голосування - Верховна Рада України</title>
+    <link rel="stylesheet" href="css/rada-style.css">
+</head>
+<body>
+    <!-- Official Header -->
+    <header class="official-header">
+        <div class="header-content">
+            <div class="emblem">🇺🇦</div>
+            <div class="official-title">
+                <h1>ВЕРХОВНА РАДА УКРАЇНИ</h1>
+                <p>Офіційна система електронного голосування</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Language Selector -->
+    <div class="language-selector">
+        <select id="languageSelect">
+            <option value="uk">🇺🇦 Українська</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="en">🇬🇧 English</option>
+        </select>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        
+        <!-- Main Menu Screen -->
+        <div id="mainMenu" class="screen">
+            <div class="main-menu">
+                <h2 data-i18n="systemTitle">СИСТЕМА ГОЛОСУВАННЯ</h2>
+                <p class="subtitle" data-i18n="systemSubtitle">Офіційна електронна система голосування Верховної Ради України</p>
+                
+                <div class="menu-buttons">
+                    <button id="createRoomBtn" class="official-btn btn-primary" data-i18n="createSession">Створити Сесію</button>
+                    <button id="joinRoomBtn" class="official-btn btn-secondary" data-i18n="joinSession">Приєднатися до Сесії</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Room Screen -->
+        <div id="createRoomScreen" class="screen hidden">
+            <div class="form-container">
+                <h2 data-i18n="createSession">Створити Сесію</h2>
+                <form id="createRoomForm">
+                    <div class="form-group">
+                        <label data-i18n="sessionName">Назва сесії:</label>
+                        <input type="text" id="newRoomName" required placeholder="Введіть назву сесії">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="sessionPassword">Пароль (необов'язково):</label>
+                        <input type="password" id="newRoomPassword" placeholder="Залиште порожнім для відкритого доступу">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="deputyName">Прізвище депутата:</label>
+                        <input type="text" id="creatorName" required placeholder="Введіть ваше прізвище">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="official-btn btn-primary" data-i18n="create">Створити</button>
+                        <button type="button" id="backFromCreate" class="official-btn btn-secondary" data-i18n="back">Назад</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Join Room Screen -->
+        <div id="joinRoomScreen" class="screen hidden">
+            <div class="form-container">
+                <h2 data-i18n="joinSession">Приєднатися до Сесії</h2>
+                <form id="joinRoomForm">
+                    <div class="form-group">
+                        <label data-i18n="sessionCode">Код сесії:</label>
+                        <input type="text" id="joinRoomId" required placeholder="Введіть 6-значний код" maxlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="sessionPassword">Пароль:</label>
+                        <input type="password" id="joinRoomPassword" placeholder="Введіть пароль, якщо є">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="deputyName">Прізвище депутата:</label>
+                        <input type="text" id="joinerName" required placeholder="Введіть ваше прізвище">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="official-btn btn-primary" data-i18n="join">Приєднатися</button>
+                        <button type="button" id="backFromJoin" class="official-btn btn-secondary" data-i18n="back">Назад</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Room Screen -->
+        <div id="roomScreen" class="screen hidden">
+            <div class="room-screen">
+                <div class="room-header">
+                    <h2 id="roomTitle">Сесія Верховної Ради</h2>
+                    <div class="room-info">
+                        <span id="roomCode" class="room-code">Код: ABC123</span>
+                        <button id="leaveRoomBtn" class="official-btn btn-danger" data-i18n="leaveSession">Покинути сесію</button>
+                    </div>
+                </div>
+
+                <div class="room-content">
+                    <!-- Sidebar - Deputies List -->
+                    <div class="sidebar">
+                        <h3 data-i18n="deputiesList">Список депутатів</h3>
+                        <ul id="usersList" class="deputies-list"></ul>
+                    </div>
+
+                    <!-- Main Content -->
+                    <div class="main-content">
+                        <!-- Host Controls -->
+                        <div id="hostControls" class="host-controls hidden">
+                            <h3 data-i18n="newVoting">Нове голосування</h3>
+                            <form id="startVotingForm">
+                                <div class="form-group">
+                                    <label data-i18n="votingQuestion">Питання для голосування:</label>
+                                    <input type="text" id="votingQuestion" required placeholder="Введіть питання або законопроект">
+                                </div>
+                                <div class="form-group">
+                                    <label data-i18n="votingDuration">Час на голосування (секунди):</label>
+                                    <input type="number" id="votingDuration" value="60" min="30" max="300" required>
+                                </div>
+                                <div class="form-group">
+                                    <label data-i18n="requiredVotes">Необхідна кількість голосів "ЗА" для прийняття:</label>
+                                    <input type="number" id="requiredVotes" value="1" min="1" required>
+                                </div>
+                                <button type="submit" class="official-btn btn-primary" data-i18n="startVoting">Почати голосування</button>
+                            </form>
+                        </div>
+
+                        <!-- Voting Area -->
+                        <div id="votingArea" class="voting-area hidden">
+                            <div class="voting-header">
+                                <h3 class="voting-question" id="currentQuestion">Питання для голосування</h3>
+                                <div class="voting-timer">
+                                    <span data-i18n="timeRemaining">Час залишилося:</span>
+                                    <span id="timerDisplay" class="timer-number">60</span>
+                                    <span data-i18n="seconds">сек.</span>
+                                </div>
+                            </div>
+                            
+                            <div class="voting-buttons">
+                                <button class="vote-button vote-for" data-vote="for">
+                                    <span class="vote-icon">🟢</span>
+                                    <span data-i18n="voteFor">ЗА</span>
+                                </button>
+                                <button class="vote-button vote-against" data-vote="against">
+                                    <span class="vote-icon">🔴</span>
+                                    <span data-i18n="voteAgainst">ПРОТИ</span>
+                                </button>
+                                <button class="vote-button vote-abstain" data-vote="abstain">
+                                    <span class="vote-icon">🟡</span>
+                                    <span data-i18n="voteAbstain">УТРИМАВСЯ</span>
+                                </button>
+                            </div>
+                            
+                            <div class="voting-progress">
+                                <span data-i18n="votedDeputies">Проголосувало депутатів:</span>
+                                <span id="votedCount">0</span>/<span id="totalUsers">0</span>
+                            </div>
+                        </div>
+
+                        <!-- Results Area -->
+                        <div id="resultsArea" class="results-area hidden">
+                            <div class="results-header">
+                                <h3 data-i18n="votingResults">Результати голосування</h3>
+                            </div>
+                            
+                            <div class="results-grid">
+                                <div class="result-card result-for">
+                                    <h4 data-i18n="voteFor">ЗА</h4>
+                                    <div class="result-number" id="resultFor">0</div>
+                                </div>
+                                <div class="result-card result-against">
+                                    <h4 data-i18n="voteAgainst">ПРОТИ</h4>
+                                    <div class="result-number" id="resultAgainst">0</div>
+                                </div>
+                                <div class="result-card result-abstain">
+                                    <h4 data-i18n="voteAbstain">УТРИМАВСЯ</h4>
+                                    <div class="result-number" id="resultAbstain">0</div>
+                                </div>
+                                <div class="result-card result-not-voted">
+                                    <h4 data-i18n="notVoted">НЕ ПРОГОЛОСУВАЛО</h4>
+                                    <div class="result-number" id="resultNotVoted">0</div>
+                                </div>
+                            </div>
+                            
+                            <div id="decision" class="decision-banner"></div>
+                            
+                            <div class="decision-details">
+                                <button id="showDetailsBtn" class="official-btn btn-secondary" data-i18n="showDetails">Показати деталі голосування</button>
+                                <div id="voteDetails" class="hidden">
+                                    <table class="results-table">
+                                        <thead>
+                                            <tr>
+                                                <th data-i18n="deputy">Депутат</th>
+                                                <th data-i18n="vote">Голос</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="voteDetailsBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal hidden">
+        <div class="modal-content">
+            <h3 data-i18n="error">Помилка</h3>
+            <p id="errorMessage">Повідомлення про помилку</p>
+            <button id="closeError" class="official-btn btn-primary" data-i18n="close">Закрити</button>
+        </div>
+    </div>
+
+    <!-- Official Seal (decorative) -->
+    <div class="official-seal">🏛️</div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/rada-app.js"></script>
+</body>
+</html>
