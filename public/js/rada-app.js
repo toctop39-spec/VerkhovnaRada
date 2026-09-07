@@ -419,6 +419,9 @@ socket.on('roomCreated', ({ sessionId, roomName, isHost: host }) => {
     document.getElementById('roomTitle').textContent = `${translations[currentLanguage].sessionCreated} ${sessionId}`;
     document.getElementById('roomCode').textContent = `${translations[currentLanguage].sessionCode} ${sessionId}`;
     
+    // Initialize total users count for the host (starts with 1)
+    document.getElementById('totalUsers').textContent = '1';
+    
     showScreen('session');
     
     if (isSpeaker) {
@@ -441,6 +444,9 @@ socket.on('roomJoined', ({ roomId, roomName, isHost: host, deputies, currentVoti
     
     updateDeputiesList(deputies);
     
+    // Initialize total users count
+    document.getElementById('totalUsers').textContent = deputies.length;
+    
     if (isSpeaker) {
         document.getElementById('hostControls').classList.remove('hidden');
     }
@@ -456,14 +462,17 @@ socket.on('roomJoined', ({ roomId, roomName, isHost: host, deputies, currentVoti
 
 socket.on('userJoined', ({ userName, deputies }) => {
     updateDeputiesList(deputies);
+    document.getElementById('totalUsers').textContent = deputies.length;
 });
 
 socket.on('userLeft', ({ userName, deputies }) => {
     updateDeputiesList(deputies);
+    document.getElementById('totalUsers').textContent = deputies.length;
 });
 
 socket.on('deputiesUpdated', ({ deputies }) => {
     updateDeputiesList(deputies);
+    document.getElementById('totalUsers').textContent = deputies.length;
 });
 
 socket.on('hostChanged', ({ newSpeaker }) => {
@@ -473,10 +482,16 @@ socket.on('hostChanged', ({ newSpeaker }) => {
     }
 });
 
-socket.on('votingStarted', ({ votingId, question, duration, requiredVotes }) => {
+socket.on('votingStarted', ({ votingId, question, duration, requiredVotes, totalDeputies }) => {
     document.getElementById('currentQuestion').textContent = question;
     document.getElementById('votingArea').classList.remove('hidden');
     document.getElementById('resultsArea').classList.add('hidden');
+    
+    // Reset voting counter and set total
+    document.getElementById('votedCount').textContent = '0';
+    if (totalDeputies) {
+        document.getElementById('totalUsers').textContent = totalDeputies;
+    }
     
     hasVoted = false;
     document.querySelectorAll('.vote-button').forEach(btn => btn.disabled = false);
