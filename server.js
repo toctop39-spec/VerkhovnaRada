@@ -128,7 +128,8 @@ io.on('connection', (socket) => {
             votingId, 
             question, 
             duration, 
-            requiredVotes 
+            requiredVotes,
+            totalDeputies: session.deputies.length
         });
         
         // Set timer
