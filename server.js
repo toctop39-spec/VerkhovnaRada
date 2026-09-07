@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
             name: roomName,
             password: password,
             speaker: socket.id, // Host is called "Speaker" in Rada context
-            deputies: [{ id: socket.id, name: userName, language: language, hasVoted: false }],
+            deputies: [{ id: socket.id, name: userName, language: language, hasVoted: false, vote: null }],
             currentVoting: null,
             votingHistory: [],
             language: language,
@@ -49,9 +49,18 @@ io.on('connection', (socket) => {
             roomName, 
             isHost: true 
         });
+        
+        const deputiesCopy = sessions[sessionId].deputies.map(d => ({
+            id: d.id,
+            name: d.name,
+            language: d.language,
+            hasVoted: d.hasVoted,
+            vote: d.vote
+        }));
+        
         io.to(sessionId).emit('userJoined', { 
             userName, 
-            deputies: sessions[sessionId].deputies 
+            deputies: deputiesCopy 
         });
         
         console.log(`Session created: ${sessionId} by ${userName}`);
@@ -83,7 +92,8 @@ io.on('connection', (socket) => {
             id: socket.id, 
             name: userName, 
             language: language, 
-            hasVoted: false 
+            hasVoted: false,
+            vote: null
         });
         
         socket.emit('roomJoined', { 
@@ -99,6 +109,8 @@ io.on('connection', (socket) => {
             userName, 
             deputies: session.deputies 
         });
+        
+        console.log('User joined. Sending deputies list:', JSON.stringify(session.deputies.map(d => ({ name: d.name, hasVoted: d.hasVoted, vote: d.vote }))));
         
         console.log(`Deputy ${userName} joined session ${roomId}`);
     });
@@ -128,6 +140,8 @@ io.on('connection', (socket) => {
             deputy.hasVoted = false;
             deputy.vote = null;
         });
+        
+        console.log('Deputy votes reset. Current deputies:', JSON.stringify(session.deputies.map(d => ({ name: d.name, hasVoted: d.hasVoted, vote: d.vote }))));
         
         io.to(roomId).emit('votingStarted', { 
             votingId, 
@@ -167,6 +181,7 @@ io.on('connection', (socket) => {
         deputy.vote = vote;
         
         console.log(`Deputy ${deputy.name} voted ${vote}. Total votes: ${Object.keys(session.currentVoting.votes).length}/${session.deputies.length}`);
+        console.log('Deputy object after voting:', JSON.stringify({ name: deputy.name, hasVoted: deputy.hasVoted, vote: deputy.vote }));
         
         io.to(roomId).emit('voteCast', { 
             userName: deputy.name, 
@@ -175,12 +190,20 @@ io.on('connection', (socket) => {
             totalDeputies: session.deputies.length
         });
         
-        // Send updated deputies list to show voting status
-        io.to(roomId).emit('deputiesUpdated', { 
-            deputies: session.deputies 
-        });
+        // Send updated deputies list to show voting status - create deep copy
+        const deputiesCopy = session.deputies.map(d => ({
+            id: d.id,
+            name: d.name,
+            language: d.language,
+            hasVoted: d.hasVoted,
+            vote: d.vote
+        }));
         
-        console.log('Sent deputiesUpdated with:', JSON.stringify(session.deputies.map(d => ({ name: d.name, hasVoted: d.hasVoted, vote: d.vote }))));
+        console.log('Sending deputiesUpdated with:', JSON.stringify(deputiesCopy.map(d => ({ name: d.name, hasVoted: d.hasVoted, vote: d.vote }))));
+        
+        io.to(roomId).emit('deputiesUpdated', { 
+            deputies: deputiesCopy 
+        });
         
         // Check if all deputies voted
         if (Object.keys(session.currentVoting.votes).length === session.deputies.length) {
@@ -266,9 +289,17 @@ function handleDeputyDisconnect(socketId, sessionId) {
             }
         }
         
+        const deputiesCopy = session.deputies.map(d => ({
+            id: d.id,
+            name: d.name,
+            language: d.language,
+            hasVoted: d.hasVoted,
+            vote: d.vote
+        }));
+        
         io.to(sessionId).emit('userLeft', { 
             userName: deputyName, 
-            deputies: session.deputies 
+            deputies: deputiesCopy 
         });
     }
 }
@@ -288,6 +319,19 @@ function endVoting(sessionId) {
     });
     
     io.to(sessionId).emit('votingEnded', results);
+    
+    // Send final deputies list with voting status
+    const finalDeputiesCopy = session.deputies.map(d => ({
+        id: d.id,
+        name: d.name,
+        language: d.language,
+        hasVoted: d.hasVoted,
+        vote: d.vote
+    }));
+    
+    io.to(sessionId).emit('deputiesUpdated', { 
+        deputies: finalDeputiesCopy 
+    });
     
     // Clear current voting after a delay
     setTimeout(() => {
