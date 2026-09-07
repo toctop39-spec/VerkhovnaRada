@@ -3,17 +3,17 @@
 :root {
     --ukraine-blue: #0057B7;
     --ukraine-yellow: #FFDD00;
-    --official-dark: #000000;
-    --official-light: #1a1a1a;
+    --official-dark: #1a1a2e;
+    --official-light: #f8f9fa;
     --official-gold: #D4AF37;
     --official-red: #C41E3A;
     --official-green: #2E8B57;
-    --text-primary: #ffffff;
-    --text-secondary: #cccccc;
-    --border-color: #333333;
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.5);
-    --shadow-md: 0 4px 6px rgba(0,0,0,0.5);
-    --shadow-lg: 0 10px 25px rgba(0,0,0,0.7);
+    --text-primary: #2c3e50;
+    --text-secondary: #6c757d;
+    --border-color: #dee2e6;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
 }
 
 * {
@@ -24,7 +24,7 @@
 
 body {
     font-family: 'Segoe UI', 'Times New Roman', Times, serif;
-    background: var(--official-dark);
+    background: linear-gradient(135deg, var(--official-dark) 0%, #16213e 100%);
     min-height: 100vh;
     color: var(--text-primary);
     line-height: 1.6;
@@ -99,11 +99,11 @@ body {
     padding: 10px 15px;
     border: 2px solid var(--official-gold);
     border-radius: 5px;
-    background: var(--official-light);
+    background: white;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    color: var(--text-primary);
+    color: var(--official-dark);
     box-shadow: var(--shadow-sm);
 }
 
@@ -124,7 +124,7 @@ body {
 
 /* Main Menu */
 .main-menu {
-    background: var(--official-light);
+    background: white;
     border-radius: 10px;
     padding: 60px 40px;
     box-shadow: var(--shadow-lg);
@@ -132,8 +132,19 @@ body {
     border-top: 5px solid var(--ukraine-blue);
 }
 
+.rada-logo {
+    margin-bottom: 30px;
+}
+
+.rada-image {
+    max-width: 300px;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+}
+
 .main-menu h2 {
-    color: var(--text-primary);
+    color: var(--ukraine-blue);
     font-size: 2.5em;
     margin-bottom: 10px;
     font-weight: 700;
@@ -183,9 +194,9 @@ body {
 }
 
 .btn-secondary {
-    background: var(--official-light);
-    color: var(--text-primary);
-    border: 2px solid var(--text-primary);
+    background: white;
+    color: var(--ukraine-blue);
+    border: 2px solid var(--ukraine-blue);
 }
 
 .btn-success {
@@ -202,7 +213,7 @@ body {
 
 /* Forms */
 .form-container {
-    background: var(--official-light);
+    background: white;
     border-radius: 10px;
     padding: 40px;
     box-shadow: var(--shadow-lg);
@@ -212,7 +223,7 @@ body {
 }
 
 .form-container h2 {
-    color: var(--text-primary);
+    color: var(--official-dark);
     text-align: center;
     margin-bottom: 30px;
     font-size: 1.8em;
@@ -238,14 +249,12 @@ body {
     font-size: 16px;
     transition: border-color 0.3s ease;
     font-family: inherit;
-    background: var(--official-dark);
-    color: var(--text-primary);
 }
 
 .form-group input:focus {
     outline: none;
     border-color: var(--ukraine-blue);
-    box-shadow: 0 0 0 3px rgba(0, 87, 183, 0.3);
+    box-shadow: 0 0 0 3px rgba(0, 87, 183, 0.1);
 }
 
 .form-actions {
@@ -260,7 +269,7 @@ body {
 
 /* Room Screen */
 .room-screen {
-    background: var(--official-light);
+    background: white;
     border-radius: 10px;
     box-shadow: var(--shadow-lg);
     overflow: hidden;
@@ -315,7 +324,7 @@ body {
 }
 
 .sidebar h3 {
-    color: var(--text-primary);
+    color: var(--ukraine-blue);
     margin-bottom: 20px;
     font-size: 1.3em;
     font-weight: 700;
@@ -373,13 +382,13 @@ body {
 }
 
 .status-voted {
-    background: #1e8449;
-    color: white;
+    background: #d4edda;
+    color: #155724;
 }
 
 .status-not-voted {
-    background: #721c24;
-    color: white;
+    background: #f8d7da;
+    color: #721c24;
 }
 
 /* Main Content Area */
@@ -389,7 +398,7 @@ body {
 
 /* Host Controls */
 .host-controls {
-    background: var(--official-light);
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     padding: 25px;
     border-radius: 8px;
     margin-bottom: 25px;
@@ -397,7 +406,7 @@ body {
 }
 
 .host-controls h3 {
-    color: var(--text-primary);
+    color: var(--official-dark);
     margin-bottom: 20px;
     font-size: 1.4em;
     font-weight: 700;
@@ -405,7 +414,7 @@ body {
 
 /* Voting Area */
 .voting-area {
-    background: var(--official-light);
+    background: white;
     border: 2px solid var(--border-color);
     border-radius: 8px;
     padding: 30px;
@@ -559,37 +568,35 @@ body {
     font-size: 1.2em;
     margin-bottom: 10px;
     font-weight: 600;
-    color: var(--text-primary);
 }
 
 .result-number {
     font-size: 2.5em;
     font-weight: 700;
     line-height: 1;
-    color: var(--text-primary);
 }
 
 .result-for {
-    background: #1e8449;
-    color: white;
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
     border: 2px solid #28a745;
 }
 
 .result-against {
-    background: #721c24;
-    color: white;
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
     border: 2px solid #dc3545;
 }
 
 .result-abstain {
-    background: #856404;
-    color: white;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+    color: #856404;
     border: 2px solid #ffc107;
 }
 
 .result-not-voted {
-    background: #383d41;
-    color: white;
+    background: linear-gradient(135deg, #e2e3e5 0%, #d6d8db 100%);
+    color: #383d41;
     border: 2px solid #6c757d;
 }
 
@@ -605,14 +612,14 @@ body {
 }
 
 .decision-accepted {
-    background: #1e8449;
-    color: white;
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
     border: 3px solid #28a745;
 }
 
 .decision-rejected {
-    background: #721c24;
-    color: white;
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
     border: 3px solid #dc3545;
 }
 
@@ -640,7 +647,7 @@ body {
 }
 
 .modal-content {
-    background: var(--official-light);
+    background: white;
     padding: 40px;
     border-radius: 10px;
     max-width: 500px;
@@ -755,14 +762,13 @@ body {
 }
 
 .results-table th {
-    background: var(--official-dark);
+    background: var(--official-light);
     font-weight: 700;
-    color: var(--text-primary);
-    border-bottom: 2px solid var(--border-color);
+    color: var(--ukraine-blue);
 }
 
 .results-table tr:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 87, 183, 0.05);
 }
 
 .hidden {
