@@ -161,18 +161,36 @@ io.on('connection', (socket) => {
 
     // Cast vote
     socket.on('castVote', ({ roomId, votingId, vote }) => {
+        console.log(`castVote received: roomId=${roomId}, votingId=${votingId}, vote=${vote}, socketId=${socket.id}`);
+        
         const session = sessions[roomId];
         
+        console.log('Session found:', !!session);
+        if (session) {
+            console.log('Current voting:', session.currentVoting ? {
+                id: session.currentVoting.id,
+                status: session.currentVoting.status
+            } : null);
+        }
+        
         if (!session || !session.currentVoting || session.currentVoting.id !== votingId) {
+            console.log('Vote rejected: session invalid or voting ID mismatch');
             return;
         }
         
         if (session.currentVoting.status !== 'active') {
+            console.log('Vote rejected: voting not active');
             return;
         }
         
         const deputy = session.deputies.find(d => d.id === socket.id);
+        console.log('Deputy found:', !!deputy);
+        if (deputy) {
+            console.log('Deputy before voting:', { name: deputy.name, hasVoted: deputy.hasVoted, vote: deputy.vote });
+        }
+        
         if (!deputy || deputy.hasVoted) {
+            console.log('Vote rejected: deputy not found or already voted');
             return;
         }
         
@@ -182,6 +200,7 @@ io.on('connection', (socket) => {
         
         console.log(`Deputy ${deputy.name} voted ${vote}. Total votes: ${Object.keys(session.currentVoting.votes).length}/${session.deputies.length}`);
         console.log('Deputy object after voting:', JSON.stringify({ name: deputy.name, hasVoted: deputy.hasVoted, vote: deputy.vote }));
+        console.log('Session deputies after voting:', JSON.stringify(session.deputies.map(d => ({ name: d.name, hasVoted: d.hasVoted, vote: d.vote }))));
         
         io.to(roomId).emit('voteCast', { 
             userName: deputy.name, 
