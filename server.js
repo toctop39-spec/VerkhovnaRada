@@ -40,7 +40,8 @@ io.on('connection', (socket) => {
             currentVoting: null,
             votingHistory: [],
             language: language,
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            timerId: null
         };
         
         socket.join(sessionId);
@@ -116,7 +117,7 @@ io.on('connection', (socket) => {
     });
 
     // Start voting
-    socket.on('startVoting', ({ roomId, question, duration, requiredVotes }) => {
+    socket.on('startVoting', ({ roomId, question, duration, requiredVotes, autoDecision }) => {
         const session = sessions[roomId];
         
         if (!session || session.speaker !== socket.id) {
@@ -124,12 +125,19 @@ io.on('connection', (socket) => {
             return;
         }
         
+        // Clear any existing timer for this session
+        if (session.timerId) {
+            clearTimeout(session.timerId);
+            session.timerId = null;
+        }
+        
         const votingId = Date.now();
         session.currentVoting = {
             id: votingId,
             question,
             duration,
-            requiredVotes,
+            requiredVotes: autoDecision ? null : requiredVotes,
+            autoDecision,
             endTime: Date.now() + duration * 1000,
             votes: {},
             status: 'active'
@@ -141,40 +149,33 @@ io.on('connection', (socket) => {
             deputy.vote = null;
         });
         
-        console.log('Deputy votes reset. Current deputies:', JSON.stringify(session.deputies.map(d => ({ name: d.name, hasVoted: d.hasVoted, vote: d.vote }))));
+        console.log(`Voting started in session ${roomId}: ${question}, autoDecision: ${autoDecision}`);
         
         io.to(roomId).emit('votingStarted', { 
             votingId, 
             question, 
             duration, 
-            requiredVotes,
+            requiredVotes: session.currentVoting.requiredVotes,
             totalDeputies: session.deputies.length
         });
         
-        // Set timer
-        setTimeout(() => {
+        // Set timer and store reference
+        session.timerId = setTimeout(() => {
             endVoting(roomId);
         }, duration * 1000);
-        
-        console.log(`Voting started in session ${roomId}: ${question}`);
     });
 
     // Cast vote
     socket.on('castVote', ({ roomId, votingId, vote }) => {
-        console.log(`castVote received: roomId=${roomId}, votingId=${votingId}, vote=${vote}, socketId=${socket.id}`);
-        
         const session = sessions[roomId];
         
-        console.log('Session found:', !!session);
-        if (session) {
-            console.log('Current voting:', session.currentVoting ? {
-                id: session.currentVoting.id,
-                status: session.currentVoting.status
-            } : null);
+        if (!session || !session.currentVoting) {
+            console.log('Vote rejected: no session or no current voting');
+            return;
         }
         
-        if (!session || !session.currentVoting || session.currentVoting.id !== votingId) {
-            console.log('Vote rejected: session invalid or voting ID mismatch');
+        if (session.currentVoting.id !== votingId) {
+            console.log('Vote rejected: voting ID mismatch. Expected:', session.currentVoting.id, 'Got:', votingId);
             return;
         }
         
@@ -184,13 +185,13 @@ io.on('connection', (socket) => {
         }
         
         const deputy = session.deputies.find(d => d.id === socket.id);
-        console.log('Deputy found:', !!deputy);
-        if (deputy) {
-            console.log('Deputy before voting:', { name: deputy.name, hasVoted: deputy.hasVoted, vote: deputy.vote });
+        if (!deputy) {
+            console.log('Vote rejected: deputy not found');
+            return;
         }
         
-        if (!deputy || deputy.hasVoted) {
-            console.log('Vote rejected: deputy not found or already voted');
+        if (deputy.hasVoted) {
+            console.log('Vote rejected: deputy already voted');
             return;
         }
         
@@ -199,8 +200,6 @@ io.on('connection', (socket) => {
         deputy.vote = vote;
         
         console.log(`Deputy ${deputy.name} voted ${vote}. Total votes: ${Object.keys(session.currentVoting.votes).length}/${session.deputies.length}`);
-        console.log('Deputy object after voting:', JSON.stringify({ name: deputy.name, hasVoted: deputy.hasVoted, vote: deputy.vote }));
-        console.log('Session deputies after voting:', JSON.stringify(session.deputies.map(d => ({ name: d.name, hasVoted: d.hasVoted, vote: d.vote }))));
         
         io.to(roomId).emit('voteCast', { 
             userName: deputy.name, 
@@ -217,8 +216,6 @@ io.on('connection', (socket) => {
             hasVoted: d.hasVoted,
             vote: d.vote
         }));
-        
-        console.log('Sending deputiesUpdated with:', JSON.stringify(deputiesCopy.map(d => ({ name: d.name, hasVoted: d.hasVoted, vote: d.vote }))));
         
         io.to(roomId).emit('deputiesUpdated', { 
             deputies: deputiesCopy 
@@ -327,6 +324,12 @@ function endVoting(sessionId) {
     const session = sessions[sessionId];
     if (!session || !session.currentVoting) return;
     
+    // Clear the timer
+    if (session.timerId) {
+        clearTimeout(session.timerId);
+        session.timerId = null;
+    }
+    
     session.currentVoting.status = 'ended';
     const results = calculateResults(session);
     
@@ -392,8 +395,17 @@ function calculateResults(session) {
     const halfDeputies = Math.ceil(totalDeputies / 2);
     
     let decision = 'rejected';
-    if (forVotes > halfDeputies || forVotes >= voting.requiredVotes) {
-        decision = 'accepted';
+    
+    if (voting.autoDecision) {
+        // Auto decision: more than half = accepted
+        if (forVotes > halfDeputies) {
+            decision = 'accepted';
+        }
+    } else {
+        // Manual decision: based on required votes
+        if (voting.requiredVotes && forVotes >= voting.requiredVotes) {
+            decision = 'accepted';
+        }
     }
     
     return {
