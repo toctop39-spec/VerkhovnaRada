@@ -297,11 +297,19 @@ function startVoting(e) {
 }
 
 function castVote(vote) {
-    if (!currentSessionId || hasVoted) return;
+    console.log('castVote called:', { currentSessionId, hasVoted, vote });
+    
+    if (!currentSessionId || hasVoted) {
+        console.log('Vote rejected: no session or already voted');
+        return;
+    }
+    
+    const votingId = Date.now();
+    console.log('Emitting castVote:', { roomId: currentSessionId, votingId, vote });
     
     socket.emit('castVote', { 
         roomId: currentSessionId, 
-        votingId: Date.now(), 
+        votingId: votingId, 
         vote 
     });
     hasVoted = true;
